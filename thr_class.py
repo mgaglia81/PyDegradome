@@ -153,7 +153,7 @@ class thresh_tab:
         # Check that F inputs are within the range of the table
         l=exp(self.Fl[0]);u=exp(self.Fl[-1])
         if F<l or F>u:
-            print "Ratio of",F,"out of table range from",l,"to",u
+            print("Ratio of",F,"out of table range from",l,"to",u)
             sys.exit()
 
         # Search for case where the (x,F) pair is in the zero region

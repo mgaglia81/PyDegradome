@@ -1,8 +1,8 @@
 # PyDegradome, a program to find cuts site in degradome-seq/PARE experiments
 # with control and test datasets
 #
-# Authors   : Marta Gaglia (Tufts Univ.), Chris H. Rycroft (Harvard/LBL)
-# Email     : marta.gaglia@tufts.edu
+# Authors   : Marta Gaglia (UW-Madison), Chris H. Rycroft (UW-Madison/LBL)
+# Email     : marta.gaglia@wisc.edu, rycroft@wisc.edu
 
 from sys import *
 from math import *
@@ -23,12 +23,12 @@ def error_message():
 
 # Help message
 def help_message():
-    print "Syntax:\n" \
+    print("Syntax:\n" \
           "python PyDegradome.py [options] <gtf file> <control .sam file> <test .sam file>\n" \
           "       <confidence level> <window size> <multiplicative factor> <output file name>\n\n" \
           "Options:\n" \
           "  -h, --help        Show the syntax of the program and exit\n" \
-          "  -t <total sites>  Override the default value of total possible read sites"
+          "  -t <total sites>  Override the default value of total possible read sites")
     exit()
 
 # Check if help requested
@@ -55,17 +55,17 @@ while len(argv) > 8:
 class chromosomes:  # Record boundaries of gene locus
     def __init__(self,ID):
         self.ID = ID
-        self.start= [[],[]]         
-        self.stop = [[],[]]          
+        self.start= [[],[]]
+        self.stop = [[],[]]
 
         # key = gene indentifier; value = list of reads (5') that map to that gene;
         # position in list: 0 = + strand, 1 = - strand
-        self.genecov = [{},{}]          
+        self.genecov = [{},{}]
 
         # key = gene indentifier, value = list of lists, one for each sample,
         # each as long as the gene length;
         # position in list: 0 = + strand, 1 = - strand
-        self.gene_l = [{},{}]       
+        self.gene_l = [{},{}]
 
         # key = gene indentifier, value = list of hit windows [start,stop];
         # position in list: 0 = + strand, 1 = - strand
@@ -73,35 +73,35 @@ class chromosomes:  # Record boundaries of gene locus
 
         # key = gene indentifier, value = list of hit windows [start,stop];
         # position in list: 0 = + strand, 1 = - strand
-        self.hitrefined = [{},{}] 
+        self.hitrefined = [{},{}]
         self.order = [[],[]]
-    
+
     # Collapses alternative transcripts into a big one
-    def add_genes(self,strand, start, stop):            
+    def add_genes(self,strand, start, stop):
         if strand == "+":
             ind = 0
         elif strand == "-":
             ind = 1
-        if len(self.start[ind]) > 0:                
-            if start < self.start[ind][-1]:         
-                print start, self.start[ind][-1]            
+        if len(self.start[ind]) > 0:
+            if start < self.start[ind][-1]:
+                print(start, self.start[ind][-1])
                 exit()
-            if start < self.stop[ind][-1]:                  
-                if stop >  self.stop[ind][-1]:              
-                    self.stop[ind][-1] = stop               
+            if start < self.stop[ind][-1]:
+                if stop >  self.stop[ind][-1]:
+                    self.stop[ind][-1] = stop
             else:
-                self.start[ind].append(start)               
-                self.stop[ind].append(stop)                 
+                self.start[ind].append(start)
+                self.stop[ind].append(stop)
         else:
-            self.start[ind].append(start)               
-            self.stop[ind].append(stop)                 
+            self.start[ind].append(start)
+            self.stop[ind].append(stop)
     def add_hit(self,s,ex_id,p1,p2):
         if ex_id not in self.hit[s]:
             self.hit[s][ex_id]=[]
         self.hit[s][ex_id].append([p1,p2])
 
 # Function to find which gene the aligned read comes from
-def find_gene(ex_start_list,ex_stop_list,n):            
+def find_gene(ex_start_list,ex_stop_list,n):
     poss_ex = []
     a = bisect(ex_start_list,n) - 1
     if a >= 0 and n <= ex_stop_list[a]:
@@ -114,7 +114,7 @@ def add_cov(l,d1,d2,s,p):
     k = str(l[0])+"-"+str(l[1])
     d1[k][s] += 1
     p2 = p-l[0]
-    d2[k][s][p2] += 1                        
+    d2[k][s][p2] += 1
 
 # Set up the gd dictionary based on the gtf file and record position of genes
 # in each chromosome
@@ -126,7 +126,7 @@ gd = {}
 for l in gtf:
     l = l.strip()
     sl = l.split("\t")
-    if sl[2] == "gene":            
+    if sl[2] == "gene":
         chrm = sl[0]
         if chrm not in gd:
             gd[chrm] = chromosomes(chrm)
@@ -155,23 +155,23 @@ for s in range(len(index_list)):
         if l[0] != "@":
             l = l.strip()
             sl = l.split("\t")
-            if sl[2] != "*":                        
-                pos = "not set"                     
-                tcr[s] += 1                         
-                for fl in range(11,len(sl)):        
-                    if sl[fl][0:2] == "XS":         
-                        XS = sl[fl]                 
+            if sl[2] != "*":
+                pos = "not set"
+                tcr[s] += 1
+                for fl in range(11,len(sl)):
+                    if sl[fl][0:2] == "XS":
+                        XS = sl[fl]
 
             # For simplicity, reads with insertions or deletions relative to
             # the reference are excluded
-                if "I" in sl[5] or "D" in sl[5] or "S" in sl[5]:     
+                if "I" in sl[5] or "D" in sl[5] or "S" in sl[5]:
                     continue
 
                 if int(sl[1]) & 16:
-                
+
                 # Removes reads that mapped to strand complementary to the
                 # reference
-                    if XS == "XS:A:-": 
+                    if XS == "XS:A:-":
                         x = 1
                         if (p.search(sl[5])):
                             pos = int(sl[3]) + len(sl[9]) - 1
@@ -183,23 +183,22 @@ for s in range(len(index_list)):
 
                 # Removes reads that mapped to strand complementary to the
                 # reference
-                    if XS == "XS:A:+": 
+                    if XS == "XS:A:+":
                         x = 0
                         pos = int(sl[3])
                 chrm = sl[2]
-                if pos != "not set" and chrm in gd:     
-                    poss_gene = find_gene(gd[chrm].start[x],gd[chrm].stop[x],pos)             
+                if pos != "not set" and chrm in gd:
+                    poss_gene = find_gene(gd[chrm].start[x],gd[chrm].stop[x],pos)
                     if len(poss_gene) != 0:
-                        k = str(poss_gene[0])+"-"+str(poss_gene[1])                
-                        if k not in gd[chrm].gene_l[x]:                                   
-                            gd[chrm].genecov[x][k] = [0,0]        
-                            ge_len = poss_gene[1]-poss_gene[0]+1   
-                            gd[chrm].gene_l[x][k] = []                    
-                            gd[chrm].gene_l[x][k].append(np.zeros(ge_len, dtype=int))      
-                            gd[chrm].gene_l[x][k].append(np.zeros(ge_len, dtype=int))      
-                        add_cov(poss_gene,gd[chrm].genecov[x],gd[chrm].gene_l[x],s,pos)       
+                        k = str(poss_gene[0])+"-"+str(poss_gene[1])
+                        if k not in gd[chrm].gene_l[x]:
+                            gd[chrm].genecov[x][k] = [0,0]
+                            ge_len = poss_gene[1]-poss_gene[0]+1
+                            gd[chrm].gene_l[x][k] = []
+                            gd[chrm].gene_l[x][k].append(np.zeros(ge_len, dtype=int))
+                            gd[chrm].gene_l[x][k].append(np.zeros(ge_len, dtype=int))
+                        add_cov(poss_gene,gd[chrm].genecov[x],gd[chrm].gene_l[x],s,pos)
                         cr[s] += 1
-
 
 tcr_s = "total reads control: "+str(tcr[0])+"\ntotal reads test: "+str(tcr[1])+"\n"
 cr_s = "reads used control: "+str(cr[0])+"\nreads used test: "+str(cr[1])+"\n"
@@ -211,19 +210,19 @@ stderr.write("\nparameters of prior distributions:\n")
 #
 # First generate a list where pos = read count, value = freq of that read count
 # 0 = control, 1 = test
-chd = [{},{}] 
+chd = [{},{}]
 
 # Scanning window size to integrate over
-w = int(argv[5]) 
+w = int(argv[5])
 
 # Record the number of windows with specific read count as a dictionary with
 # key = read count, value = # of instances (one for test, and one for control
 # samples)
 for chrm in gd:
     for x in [0,1]:
-        for ex in gd[chrm].gene_l[x]:                       
+        for ex in gd[chrm].gene_l[x]:
             for z in [0,1]:
-                temp_hl = gd[chrm].gene_l[x][ex][z]         
+                temp_hl = gd[chrm].gene_l[x][ex][z]
                 for nt in range(0, len(temp_hl)-w+1):
                     w_hl = sum(temp_hl[nt:nt+w])
                     ch = l_scale(w_hl)
@@ -268,26 +267,26 @@ stderr.write("finding peaks:\n")
 
 for chrm in gd:
     for x in [0,1]:
-        for ex in gd[chrm].gene_l[x]:               
+        for ex in gd[chrm].gene_l[x]:
             count += 1
             if count % 100000 == 0:
-                stderr.write("processed "+str(count)+" genes\n")            
+                stderr.write("processed "+str(count)+" genes\n")
             flag = 0
             for ds in [0,1]:
-                if gd[chrm].genecov[x][ex][ds] > 10:                    
+                if gd[chrm].genecov[x][ex][ds] > 10:
                     flag += 1
             if flag == 2:
-                ge_cov_ratio = float(gd[chrm].genecov[x][ex][1])/float(gd[chrm].genecov[x][ex][0])      
-                factor = co*ge_cov_ratio                                                            
+                ge_cov_ratio = float(gd[chrm].genecov[x][ex][1])/float(gd[chrm].genecov[x][ex][0])
+                factor = co*ge_cov_ratio
 
                 # If the factor is larger 100, it will be artificially set to
                 # 100 and a warning message will be printed
-                if factor > 100: 
-                    err_mess = "Ratio of " + str(factor) + " found, chrm "+ chrm+", gene "+ex           
+                if factor > 100:
+                    err_mess = "Ratio of " + str(factor) + " found, chrm "+ chrm+", gene "+ex
                     stderr.write(err_mess+"\n")
                     factor = 100
-                temp_t = gd[chrm].gene_l[x][ex][1]                                  
-                temp_c = gd[chrm].gene_l[x][ex][0]                                  
+                temp_t = gd[chrm].gene_l[x][ex][1]
+                temp_c = gd[chrm].gene_l[x][ex][0]
                 for nt in range(0, len(temp_c) - w + 1):
                     w_t = sum(temp_t[nt:nt+w])
                     w_c = sum(temp_c[nt:nt+w])
@@ -302,7 +301,7 @@ for c in gd:
     for x in [0,1]:
         for ex in gd[c].hit[x]:
             temp = gd[c].hit[x][ex]
-            cov = gd[c].gene_l[x][ex][1]                                    
+            cov = gd[c].gene_l[x][ex][1]
             if len(temp) != 0:
                 for i in range(0,len(temp)):
                     a = cov[temp[i][0]:temp[i][1]]
@@ -361,19 +360,19 @@ for c in gd:
 outf = open(argv[7],"w")
 outf.write("#chr_gene-start_gene-end\tstrand\tpeak_start\tpeak_stop\tmax_peak_test\tratio\tfactor\tmax_count_test\tmax_count_ctl\ttot_count_test\ttot_count_ctl\n")
 
-chrm_list = gd.keys()
+chrm_list = list(gd.keys())
 chrm_list.sort()
 
 strand_l = ["+","-"]
 
 for c in chrm_list:
     for x in [0,1]:
-        order = gd[c].hitrefined[x].keys()
+        order = list(gd[c].hitrefined[x].keys())
         order.sort()
         for ex in order:
             temp_fin = gd[c].hitrefined[x][ex]
-            cov_t = gd[c].gene_l[x][ex][1]                      
-            cov_c = gd[c].gene_l[x][ex][0]                      
+            cov_t = gd[c].gene_l[x][ex][1]
+            cov_c = gd[c].gene_l[x][ex][0]
             info = ex.split("-")
             ex_start = int(info[0])
             ex_end = int(info[1])
@@ -384,16 +383,16 @@ for c in chrm_list:
                     control = cov_c[h[0]:h[1]]
                     maxtest = max(test)
                     maxcontrol = max(control)
-                    peak_rel = np.where(test == maxtest)[0][0]                  
+                    peak_rel = np.where(test == maxtest)[0][0]
                     start = ex_start + h[0]
                     end = ex_start + h[1]
                     peak = start + peak_rel
                     tot_t = sum(test)
                     tot_c = sum(control)
-                    ratio = float(gd[c].genecov[x][ex][1])/float(gd[c].genecov[x][ex][0])           
+                    ratio = float(gd[c].genecov[x][ex][1])/float(gd[c].genecov[x][ex][0])
                     factor = ratio*co
-                    chrm_id = c + "_" + str(ex_start) + "_" + str(ex_end)                          
-                    new_line = [chrm_id, strand, str(start), str(end), str(peak), str(ratio), str(factor), str(maxtest), str(maxcontrol),str(tot_t),str(tot_c)]                                             
+                    chrm_id = c + "_" + str(ex_start) + "_" + str(ex_end)
+                    new_line = [chrm_id, strand, str(start), str(end), str(peak), str(ratio), str(factor), str(maxtest), str(maxcontrol),str(tot_t),str(tot_c)]
                     nlj2 = "\t".join(new_line)
                     outf.write(nlj2+"\n")
                     if h[0]-10 > 0 :

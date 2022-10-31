@@ -5,7 +5,7 @@ import numpy as np
 import re
 
 if len(argv) < 7 :
-    print "Need arguments:\n1 = peak file\n2 = gtf file\n3 = motif pwm\n4 = genome fasta\n5 = ouput pdf name\n6 = position of nt 0 relative to total tested sequence length\nSyntax: cut_score_ranking.py <peak file> <gtf file> <pwm file> <genome fasta> <output pdf name> <pos 0>"
+    print("Need arguments:\n1 = peak file\n2 = gtf file\n3 = motif pwm\n4 = genome fasta\n5 = ouput pdf name\n6 = position of nt 0 relative to total tested sequence length\nSyntax: cut_score_ranking.py <peak file> <gtf file> <pwm file> <genome fasta> <output pdf name> <pos 0>")
     exit()
 
 ## define motif loading and scoring functions

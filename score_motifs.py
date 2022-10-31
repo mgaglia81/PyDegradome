@@ -7,7 +7,7 @@ import numpy as np
 from scipy import stats
 
 if len(argv) < 4:
-    print "Need arguments:\n1 = pwm\n2 = title of pdf output\n3 and following = fasta to score\nSyntax: python score_motifs.py <pwm> <title of pdf output file> <fasta to score 1> <fasta to score 2> ..."
+    print("Need arguments:\n1 = pwm\n2 = title of pdf output\n3 and following = fasta to score\nSyntax: python score_motifs.py <pwm> <title of pdf output file> <fasta to score 1> <fasta to score 2> ...")
     exit()
 
 ## function to load in fasta file - used the identifier after ">" as id and the string on the following line as the sequence
@@ -51,7 +51,7 @@ def m_seq_score(pwm, d):
 m = open(argv[1],"r")
 
 pwm = load_motif(m)
-print "pwm loaded"
+print("pwm loaded")
 
 ## prepare settings for plotting a histogram - manually enter values to use for colors and legends
 plt.figure(1)
@@ -60,10 +60,10 @@ labels = ["sample1","sample2", "sample3","sample4"]
 
 all_scores =[]
 
-print "\nanalyzing files:"
+print("\nanalyzing files:")
 
 for x in range(3,len(argv)): ## takes multiple files if needed
-    print argv[x] ## prints out name of each file as confirmation
+    print(argv[x]) ## prints out name of each file as confirmation
     fs = open(argv[x],"r")
     ds = load_fasta(fs)
     lscore = m_seq_score(pwm,ds)
@@ -74,14 +74,14 @@ for x in range(3,len(argv)): ## takes multiple files if needed
 plt.legend(loc=0)
 plt.savefig(argv[2], format="PDF")
 
-print "\nKS test p-values"
+print("\nKS test p-values")
 
 if (len(argv) - 3) > 1:
     for x in range(len(all_scores)-1):
         for y in range(x+1,len(all_scores)):
-            print argv[x+3],"vs.",argv[y+3]
+            print(argv[x+3],"vs.",argv[y+3])
             a = all_scores[x]
             b = all_scores[y]
             KS_stats = stats.ks_2samp(a,b)
             pval = KS_stats[1]
-            print pval
+            print(pval)
