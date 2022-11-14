@@ -2,6 +2,13 @@
 #include <cstdlib>
 #include <cmath>
 
+#ifndef __OPENMP
+#include <omp.h>
+inline int t_num() {return omp_get_thread_num();}
+#else
+inline int t_num() {return 0;}
+#endif
+
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
@@ -33,27 +40,45 @@ inline double t_power(double a,double b,gsl_rng *rng) {
 }
 
 int main() {
-    unsigned int i,j,k,b[n],bmax=0;
-
-    // Allocate the GSL random number generator
-    gsl_rng *rng;
-    rng=gsl_rng_alloc(gsl_rng_taus2);
-
-    // Clear the bins for frequency distribution
-    for(j=0;j<n;j++) b[j]=0;
+    unsigned long b[n];
+    for(unsigned int l=0;l<n;l++) b[l]=0;
 
     // Generate samples
-    for(i=0;i<100000000;i++) {
-        k=gsl_ran_poisson(rng,t_power(2.16,0.0111,rng));
-        
-        j=l_scale(k);
-        if(j>=n) {
-            fprintf(stderr,"Count %u and bin number %u out of range\n",k,j);
-        } else {
-            if(j>bmax) bmax=j;
-            b[j]++;
+#pragma omp parallel
+    {
+        unsigned int j,k;
+
+        // Allocate the GSL random number generator
+        gsl_rng *rng;
+        rng=gsl_rng_alloc(gsl_rng_taus2);
+        gsl_rng_set(rng,t_num()+1);
+
+        // Allocate local bins
+        unsigned long c[n];
+        for(j=0;j<n;j++) c[j]=0;
+
+#pragma omp for
+        for(unsigned long i=0;i<100000000;i++) {
+            k=gsl_ran_poisson(rng,t_power(2.16,0.0111,rng));
+
+            j=l_scale(k);
+            if(j>=n) {
+                fprintf(stderr,"Count %u and bin number %u out of range\n",k,j);
+            } else c[j]++;
         }
+
+        // Add local bins to global bins
+        for(j=0;j<n;j++) {
+#pragma omp atomic
+            b[j]+=c[j];
+        }
+        gsl_rng_free(rng);
     }
 
-    for(j=0;j<=bmax;j++) printf("%g %u %g\n",il_scale(j),b[j],b[j]/double(l_size(j)));
+    unsigned int bmax=n;
+    while(b[--bmax]==0) {
+        if(bmax==0) {fputs("No counts\n",stderr);return 1;}
+    }
+
+    for(unsigned int l=0;l<=bmax;l++) printf("%g %lu %g\n",il_scale(l),b[l],b[l]/double(l_size(l)));
 }
