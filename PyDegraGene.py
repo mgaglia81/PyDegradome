@@ -211,7 +211,7 @@ chd = [{},{}]
 tot_genes_temp = 0
 for chrm in gd:
     for x in [0,1]:
-        for ex in gd[chrm].cov[x]:
+        for ex in gd[chrm].genecov[x]:
             tot_genes_temp +=1
             for z in [0,1]:
                 ch = l_scale(gd[chrm].genecov[x][ex][z])
