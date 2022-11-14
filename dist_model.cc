@@ -52,14 +52,16 @@ int main() {
         gsl_rng *rng;
         rng=gsl_rng_alloc(gsl_rng_taus2);
         gsl_rng_set(rng,t_num()+1);
-
+    
         // Allocate local bins
         unsigned long c[n];
         for(j=0;j<n;j++) c[j]=0;
 
 #pragma omp for
         for(unsigned long i=0;i<100000000;i++) {
-            k=gsl_ran_poisson(rng,t_power(2.16,0.0111,rng));
+            double v=t_power(1.2,0.0001,rng)*t_power(2.16,0.0111,rng);
+            if(v>1000000) continue;
+            k=gsl_ran_poisson(rng,v);
 
             j=l_scale(k);
             if(j>=n) {
